@@ -53,7 +53,9 @@ def describe_route(route):
     """
     leg = route['legs'][0]
     steps = leg['steps']
-    maneuvers = [(s['distance'], s['maneuver']) for s in steps]
+    
+    distances = [s['distance'] for s in steps]
+    maneuvers = [s['maneuver'] for s in steps]
     
     """https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md :
     
@@ -67,8 +69,25 @@ def describe_route(route):
     left 	a normal turn to the left
     sharp left 	a sharp turn to the left
     """
+    moves = {
+        'uturn': 'развернитесь',
+        'sharp right': "резко поверните направо",
+        'right': "поверните на право",
+        'slight right': "незначительно поверните направо",
+        'straight': "продолжайте движение прямо",
+        'slight left': "незначительно поверните налево",
+        'left': "поверните налево",
+        'sharp left': "резко поверните налево"
+    }
 
-    return(maneuvers)
+    maneuvers = [moves[m['modifier']] for m in maneuvers]
+    
+    texts = []
+    for i in range(len(distances)):
+        t = 'Пройдите %s метров и %s' % (distances[i], maneuvers[i])
+        texts.append(t)
+
+    return texts
 
     
 
@@ -87,5 +106,6 @@ if __name__ == "__main__":
 
     r = ask_for_route(x1, y1, x2, y2)
     man = describe_route(r)
-    print (man)
+    for t in man:
+        print (t)
     
