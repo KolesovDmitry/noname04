@@ -1,19 +1,45 @@
 # encoding: utf-8
-# Get coordinates using Yandex Geocoder
+
+"""
+127.0.0.1:5000/?start=Казань ул. Баумана, 70&finish=Казань, ул Кремлевская, 5
+"""
+
 
 import requests
 
-from cost import GRASS
+from flask import Flask
+from flask import request
+from flask import jsonify
 
-# https://geocode-maps.yandex.ru/1.x/?format=json&apikey=10edb3e5-200b-4eea-a6a8-0d052347c20b&geocode=
+app = Flask(__name__)
+
+
 
 class AddressNotFoundError(Exception):
     pass
 
 
+class Cache():
+    def __init__(self):
+        self.cache = {}
+        
+    def set_value(self, addr, value):
+        self.cache[addr] = value
+    
+    def in_cache(self, addr):
+        return addr in self.cache.keys()
+    
+    def get_value(self, addr):
+        return self.cache[addr]
+
+_ADDRESS_COORD_CACHE = Cache() 
+
+
 def geocode(address):
     """Геокодирование адреса на API Яндекса
     """
+    # https://geocode-maps.yandex.ru/1.x/?format=json&apikey=10edb3e5-200b-4eea-a6a8-0d052347c20b&geocode=
+
     BASE_URL = "https://geocode-maps.yandex.ru/1.x/?format=json"
     API_KEY = "10edb3e5-200b-4eea-a6a8-0d052347c20b"
 
@@ -27,7 +53,7 @@ def geocode(address):
     members = collection["featureMember"]
 
     if len(members) == 0:
-        raise AddressNotFoundError('Address "%s" not found' % address)
+        raise AddressNotFoundError('Искомый адрес "%s" не найден' % address)
 
     feature0 = members[0]
     point = feature0["GeoObject"]["Point"]
@@ -89,10 +115,34 @@ def describe_route(route):
 
     return texts
 
+
+def _get_xy(address):
+    if not _ADDRESS_COORD_CACHE.in_cache(address):
+        x,y = geocode(address)
+        _ADDRESS_COORD_CACHE.set_value(address, (x,y))
     
+    return _ADDRESS_COORD_CACHE.get_value(address)
+    
+@app.route("/geo")
+def hello():
+    start = request.args.get('start')        
+    finish = request.args.get('finish')
 
-if __name__ == "__main__":
+    x1, y1 = _get_xy(start)
+    x2, y2 = _get_xy(finish)
+    
+    route = ask_for_route(x1, y1, x2, y2)
+    description = describe_route(route)
+    
+    result = {
+        'geo': route,
+        'text': description        
+    }
+    
+    return jsonify(result)
 
+
+def main():    
     # x1, y1 = geocode('Казань, ул. Баумана, дом 70')
     # x2, y2 = geocode('Казань, ул. Кремлевская, дом 7')
     x1, y1 = (49.117355, 55.789082)
@@ -108,4 +158,10 @@ if __name__ == "__main__":
     man = describe_route(r)
     for t in man:
         print (t)
+
+
+
+if __name__ == "__main__":
+    app.run()
+
     
