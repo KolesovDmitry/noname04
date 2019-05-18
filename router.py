@@ -72,7 +72,7 @@ def describe_route(route):
     moves = {
         'uturn': 'развернитесь',
         'sharp right': "резко поверните направо",
-        'right': "поверните на право",
+        'right': "поверните направо",
         'slight right': "незначительно поверните направо",
         'straight': "продолжайте движение прямо",
         'slight left': "незначительно поверните налево",
@@ -84,7 +84,7 @@ def describe_route(route):
     
     texts = []
     for i in range(len(distances)):
-        t = 'Пройдите %s метров и %s' % (distances[i], maneuvers[i])
+        t = '%s и пройдите %s метров' % (maneuvers[i], distances[i])
         texts.append(t)
 
     return texts
