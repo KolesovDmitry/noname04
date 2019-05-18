@@ -12,6 +12,8 @@ class AddressNotFoundError(Exception):
 
 
 def geocode(address):
+    """Геокодирование адреса на API Яндекса
+    """
     BASE_URL = "https://geocode-maps.yandex.ru/1.x/?format=json"
     API_KEY = "10edb3e5-200b-4eea-a6a8-0d052347c20b"
 
@@ -39,18 +41,22 @@ def geocode(address):
 def ask_for_route(x1, y1, x2, y2):
     URL = "https://gooddeed.me/noname4/wheel/route/v1/foot/%s,%s;%s,%s?steps=true&geometries=geojson" % (x1, y1, x2, y2)
     r = requests.get(URL)
+    
+    r = r.json()
+    route  = r['routes'][0]
 
-    return r.json()
+    return route
 
 
 def describe_route(route):
-    route = route['routes'][0]
-
+    """Описание маршрута в виде "маневров": точка и действие в точке
+    """
     leg = route['legs'][0]
     steps = leg['steps']
     maneuvers = [(s['distance'], s['maneuver']) for s in steps]
     
-    """
+    """https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md :
+    
         modifier 	Description
     uturn 	indicates reversal of direction
     sharp right 	a sharp right turn
@@ -64,16 +70,6 @@ def describe_route(route):
 
     return(maneuvers)
 
-
-def get_passage(xstart, ystart, xfin, yfin):
-    
-    ### NB: захардкожены пути к БД GRASS - ее расположение ожидается в текущем каталоге
-    ###
-    grs = GRASS('.', 'COST')
-    result = grs.find_path(xstart, ystart, xfin, yfin)
-    print(result)
-    
-    return result
     
 
 if __name__ == "__main__":
@@ -93,17 +89,3 @@ if __name__ == "__main__":
     man = describe_route(r)
     print (man)
     
-    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    print("""По идее на этом этапе роутинг работает. 
-          Но иногда первый и последний сегмент проходит по дому. 
-          Все последующие издевательства - попытка обойти вокруг дома.""")
-    print('!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
-    
-    """
-    xman, yman = man[0][1]['location']
-    psg = get_passage(x1, y1, xman, yman)
-    
-    xman, yman = man[-1][1]['location']
-    psg = get_passage(x2, y2, xman, yman)
-    print(psg)
-    """
