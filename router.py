@@ -66,10 +66,13 @@ def geocode(address):
 
 def ask_for_route(x1, y1, x2, y2):
     URL = "https://gooddeed.me/noname4/wheel/route/v1/foot/%s,%s;%s,%s?steps=true&geometries=geojson" % (x1, y1, x2, y2)
-    r = requests.get(URL)
+    osrm_response = requests.get(URL)
     
-    r = r.json()
-    route  = r['routes'][0]
+    data = osrm_response.json()
+
+    app.logger.debug("OSRM: %s %r", osrm_response, data)
+
+    route  = data['routes'][0]
 
     return route
 
@@ -82,7 +85,7 @@ def describe_route(route):
     
     distances = [s['distance'] for s in steps]
     maneuvers = [s['maneuver'] for s in steps]
-    
+
     """https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md :
     
         modifier 	Description
@@ -106,11 +109,11 @@ def describe_route(route):
         'sharp left': "резко поверните налево"
     }
 
-    maneuvers = [moves[m['modifier']] for m in maneuvers]
+    maneuvers = [(moves[m['modifier']] + ' и ') if 'modifier' in m else '' for m in maneuvers]
     
     texts = []
     for i in range(len(distances)):
-        t = '%s и пройдите %s метров' % (maneuvers[i], distances[i])
+        t = '%sпройдите %s метров' % (maneuvers[i], distances[i])
         texts.append(t)
 
     return texts
