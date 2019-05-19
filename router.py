@@ -111,7 +111,7 @@ n_km = ru_plural_formatter('километр', 'километра', 'килом
 
 
 def humanize_distance(m):
-    if m < 5:
+    if m < 3:
         return 'пару метров'
     for a, b in [
             (100, 2.5),
