@@ -140,7 +140,8 @@ def describe_route(route):
     leg = route["legs"][0]
     steps = leg["steps"]
 
-    distances = [humanize_distance(s["distance"]) for s in steps]
+    # distances = [humanize_distance(s["distance"]) for s in steps]
+    distances = [s["distance"] for s in steps]
     maneuvers = [s["maneuver"] for s in steps]
 
     # From https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md
@@ -168,15 +169,17 @@ def describe_route(route):
     }
 
     maneuvers = [
-        (moves[m["modifier"]] + " и ") if "modifier" in m else "" for m in maneuvers
+        moves[m["modifier"]] if "modifier" in m else "" for m in maneuvers
     ]
 
-    texts = []
+    description = []
     for i in range(len(distances)):
-        t = "%sпройдите %s" % (maneuvers[i], distances[i])
-        texts.append(t)
+        t = {'text': maneuvers[i], 'dist': distances[i]}
+        description.append(t)
+    
+    description.append({'dist': 0, 'text': 'вы на месте'})
 
-    return texts
+    return description
 
 
 def _get_xy(address):
