@@ -168,10 +168,10 @@ def describe_route(route):
 
     description = []
     for i in range(len(distances)):
-        t = {'text': maneuvers[i], 'dist': distances[i]}
+        t = "%s и пройдите %s" %(maneuvers[i], distances[i])
         description.append(t)
     
-    description.append({'dist': 0, 'text': 'вы на месте'})
+    description.append('вы на месте')
 
     return description
 
