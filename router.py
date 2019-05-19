@@ -81,16 +81,8 @@ def ask_for_route(x1, y1, x2, y2):
 
     return route
 
-
-def nmeter(m):
-    m = int(m)
-    if m >= 10 and m < 21:
-        return '%d метров' % m
-    if m % 10 == 1:
-        return '%d метр' % m
-    if m % 10 != 0 and m % 10 < 5:
-        return '%d метра' % m
-    return '%d метров' % m
+def meters_to_steps(m):
+    return m/0.75
 
 
 def ru_plural_formatter(single, couple, many):
@@ -106,32 +98,34 @@ def ru_plural_formatter(single, couple, many):
     return formatter
 
 
-n_meter = ru_plural_formatter('метр', 'метра', 'метров')
-n_km = ru_plural_formatter('километр', 'километра', 'километров')
+n_steps = ru_plural_formatter('шаг', 'шага', 'шагов')
+n_km = ru_plural_formatter('тысяча', 'тысячи', 'тысяч')
 
 
 def humanize_distance(m):
-    if m < 3:
-        return 'пару метров'
+    s = meters_to_steps(m)
+    
+    if s < 3:
+        return 'пару шагов'
     for a, b in [
             (25, 2.5),
             (100, 5),
             (500, 25),
             (2500, 50),
     ]:
-        if m < a:
-            m += b  # for proper rounding
-            return n_meter(m - m % (b * 2))
-    km = m // 1000
-    if km < 10:
-        ret = n_km(km)
-        m = m - km * 1000
-        m += 50
-        m -= m % 100
-        if m:
-            ret += ' ' + n_meter(m - m % 100)
+        if s < a:
+            s += b  # for proper rounding
+            return n_steps(s - s % (b * 2))
+    thousands = s // 1000
+    if thousands < 10:
+        ret = n_km(thousands)
+        s = s - thousands * 1000
+        s += 50
+        s -= s % 100
+        if s:
+            ret += ' ' + n_steps(s - s % 100)
         return ret
-    return n_km(km)
+    return n_km(thousands)
 
 
 def describe_route(route):
@@ -140,8 +134,8 @@ def describe_route(route):
     leg = route["legs"][0]
     steps = leg["steps"]
 
-    # distances = [humanize_distance(s["distance"]) for s in steps]
-    distances = [s["distance"] for s in steps]
+    distances = [humanize_distance(s["distance"]) for s in steps]
+    # distances = [s["distance"] for s in steps]
     maneuvers = [s["maneuver"] for s in steps]
 
     # From https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md
